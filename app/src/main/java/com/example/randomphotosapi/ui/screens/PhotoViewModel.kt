@@ -29,7 +29,7 @@ sealed interface PhotoUiState {
 }
 
 
-
+const val folderName = "MyImages"
 
 class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -83,9 +83,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
 
 
     fun saveImageToInternalStorage(context: Context, bild: Bitmap, i : Int) {
-        val folderName = "MyImages"
         val fileName = "IMG_$i.jpg"
-
         val folder = File(context.filesDir, folderName)
         if (!folder.exists()) {
             folder.mkdirs()
