@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.http.HttpException
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,9 +20,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 sealed interface PhotoUiState {
-
     object Success: PhotoUiState
-
     object Error : PhotoUiState
     object Loading : PhotoUiState
 }
@@ -37,10 +34,10 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     var photoUiState: PhotoUiState by mutableStateOf(PhotoUiState.Loading)
         private set
     init {
-        getMarsPhotos()
+        getRandomPhotos()
     }
 
-    fun getMarsPhotos() {
+    fun getRandomPhotos() {
         viewModelScope.launch {
             photoUiState = PhotoUiState.Loading
             photoUiState = try {
