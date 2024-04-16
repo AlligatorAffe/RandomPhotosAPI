@@ -69,9 +69,8 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
                         performTask(urls[index])
                     }
                 }
-                tasks.forEach {
-                    saveImageToInternalStorage(context,it.await(), i)
-                    i++;
+                tasks.forEachIndexed { index, element ->
+                    saveImageToInternalStorage(context,element.await(), index)
                 }
             }
         } catch (e: Exception) {
