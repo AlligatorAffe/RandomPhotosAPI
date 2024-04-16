@@ -5,9 +5,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.http.HttpException
+import android.util.Log
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.randomphotosapi.network.PhotoApi
@@ -20,7 +25,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 sealed interface PhotoUiState {
-    object Success: PhotoUiState
+    //object Success: PhotoUiState
+    data class Success(val images: MutableList<Bitmap>) : PhotoUiState
     object Error : PhotoUiState
     object Loading : PhotoUiState
 }
@@ -30,6 +36,7 @@ const val folderName = "MyImages"
 
 class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
+
 
     var photoUiState: PhotoUiState by mutableStateOf(PhotoUiState.Loading)
         private set
@@ -44,7 +51,8 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
                 val listResult = async { PhotoApi.retrofitService.getPhotos() }.await()
                 val imgUrls = listResult.map { it.downloadURL }
                 async{ fetchImages(imgUrls) }.await()
-                PhotoUiState.Success
+                val images = async { loadingAndPushingImagesToArray() }.await()
+                PhotoUiState.Success(images)
 
             } catch (e: IOException) {
                 PhotoUiState.Error
@@ -75,6 +83,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         }
         return results
     }
+
 
 
 
@@ -134,5 +143,20 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return inSampleSize
+    }
+
+
+    fun loadingAndPushingImagesToArray(): MutableList<Bitmap> {
+        val imageBitmap = mutableListOf<Bitmap>()
+        val path = context.filesDir.path + "/" + folderName
+        val files = File(path).listFiles() ?: emptyArray()
+        files.forEach { file ->
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            imageBitmap.add(bitmap)
+            Log.d("BILDER", "DETTA ÄR I ARRAY $imageBitmap")
+            Log.d("BILDER", "detta laddas in i array $bitmap")
+            Log.d("BILDER", "bildernas path: $path")
+        }
+        return imageBitmap
     }
 }

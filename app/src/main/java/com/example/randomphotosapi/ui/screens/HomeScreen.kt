@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,7 +38,10 @@ fun HomeScreen(
     ) {
     when (photoUiState) {
         is PhotoUiState.Loading -> LoadingScreen()
-        is PhotoUiState.Success -> ResultScreen(modifier = modifier.fillMaxSize())
+        //is PhotoUiState.Success -> ResultScreen(modifier = modifier.fillMaxSize())
+        is PhotoUiState.Success -> ResultScreen(
+            photoUiState.images,modifier = modifier.fillMaxSize()
+        )
         is PhotoUiState.Error -> ErrorScreen( modifier = modifier.fillMaxSize())
     }
 }
@@ -61,22 +65,25 @@ fun ErrorScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ResultScreen(modifier: Modifier = Modifier) {
-    val imageMap = "/MyImages"
-    val context = LocalContext.current
-    val path = context.filesDir.path+imageMap
-    val files = File(path).listFiles()?.toList() ?: emptyList()
+fun ResultScreen(photos: List<Bitmap>,  modifier: Modifier = Modifier) {
+    //val imageMap = "/MyImages"
+    //val context = LocalContext.current
+    //val path = context.filesDir.path+imageMap
+    //val files = File(path).listFiles()?.toList() ?: emptyList()
     val columns = 2
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = modifier
     ) {
 
-        items(files) { file ->
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            bitmap?.let {
-                ImageComposable(bild = bitmap)
-            }
+        //items(files) { file ->
+            //val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            //bitmap?.let {
+                //ImageComposable(bild = bitmap)
+            //}
+        //}
+        items(photos){
+            ImageComposable(bild = it)
         }
     }
 }
@@ -86,7 +93,6 @@ fun ResultScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun ImageComposable(bild: Bitmap) {
-
     Box(
         modifier = Modifier
             .size(150.dp)
@@ -98,9 +104,13 @@ fun ImageComposable(bild: Bitmap) {
             loading = {
                 CircularProgressIndicator()
             },
+            error = {
+                Text(text = "Kunde inte ladda bilden")
+            },
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
             contentDescription = "randomPhotos"
         )
     }
 }
+
