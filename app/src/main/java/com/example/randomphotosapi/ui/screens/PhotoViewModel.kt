@@ -6,13 +6,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.http.HttpException
 import android.util.Log
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.randomphotosapi.network.PhotoApi
@@ -25,14 +21,14 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 sealed interface PhotoUiState {
-    //object Success: PhotoUiState
-    data class Success(val images: MutableList<Bitmap>) : PhotoUiState
+    data class Success(val images: MutableList<String>) : PhotoUiState
     object Error : PhotoUiState
     object Loading : PhotoUiState
 }
 
 
 const val folderName = "MyImages"
+const val slash = "/"
 
 class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -62,14 +58,11 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-
     suspend fun fetchImages(urls: List<String>): MutableList<Bitmap> {
-        var i = 1;
         val results = mutableListOf<Bitmap>()
         try {
             coroutineScope {
-                val tasks = List(urls.size) { index -> // Drar igång hela url listans
+                val tasks = List(urls.size) { index ->
                     async(Dispatchers.IO) {
                         performTask(urls[index])
                     }
@@ -88,7 +81,7 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
 
 
     fun saveImageToInternalStorage(context: Context, bild: Bitmap, i : Int) {
-        val fileName = "IMG_$i.jpg"
+        val fileName = "IMG_${i}.jpg"
         val folder = File(context.filesDir, folderName)
         if (!folder.exists()) {
             folder.mkdirs()
@@ -146,17 +139,13 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun loadingAndPushingImagesToArray(): MutableList<Bitmap> {
-        val imageBitmap = mutableListOf<Bitmap>()
-        val path = context.filesDir.path + "/" + folderName
+    fun loadingAndPushingImagesToArray(): MutableList<String> {
+        val imagePaths = mutableListOf<String>()
+        val path = context.filesDir.path + slash + folderName
         val files = File(path).listFiles() ?: emptyArray()
         files.forEach { file ->
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            imageBitmap.add(bitmap)
-            Log.d("BILDER", "DETTA ÄR I ARRAY $imageBitmap")
-            Log.d("BILDER", "detta laddas in i array $bitmap")
-            Log.d("BILDER", "bildernas path: $path")
+            imagePaths.add(path + slash + file.name);
         }
-        return imageBitmap
+        return imagePaths
     }
 }

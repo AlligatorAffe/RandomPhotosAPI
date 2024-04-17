@@ -1,14 +1,12 @@
 package com.example.randomphotosapi.ui.screens
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Log
+
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -22,25 +20,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import java.io.File
+import coil.compose.rememberAsyncImagePainter
+
 
 
 @Composable
 fun HomeScreen(
     photoUiState: PhotoUiState,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-
-
+    contentPadding: PaddingValues = PaddingValues(0.dp)
     ) {
     when (photoUiState) {
         is PhotoUiState.Loading -> LoadingScreen()
-        //is PhotoUiState.Success -> ResultScreen(modifier = modifier.fillMaxSize())
         is PhotoUiState.Success -> ResultScreen(
-            photoUiState.images,modifier = modifier.fillMaxSize()
+            photoUiState.images, modifier = modifier.fillMaxSize()
         )
         is PhotoUiState.Error -> ErrorScreen( modifier = modifier.fillMaxSize())
     }
@@ -49,7 +43,6 @@ fun HomeScreen(
 @Composable
 fun LoadingScreen() {
     CircularProgressIndicator()
-
 }
 
 
@@ -65,52 +58,35 @@ fun ErrorScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ResultScreen(photos: List<Bitmap>,  modifier: Modifier = Modifier) {
-    //val imageMap = "/MyImages"
-    //val context = LocalContext.current
-    //val path = context.filesDir.path+imageMap
-    //val files = File(path).listFiles()?.toList() ?: emptyList()
+fun ResultScreen(photos: MutableList<String>, modifier: Modifier = Modifier) {
     val columns = 2
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = modifier
     ) {
-
-        //items(files) { file ->
-            //val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            //bitmap?.let {
-                //ImageComposable(bild = bitmap)
-            //}
-        //}
         items(photos){
-            ImageComposable(bild = it)
+            ImageComposable(imageUrl = it)
         }
     }
 }
 
-
-
-
 @Composable
-fun ImageComposable(bild: Bitmap) {
+fun ImageComposable(imageUrl: String) {
     Box(
         modifier = Modifier
             .size(150.dp)
             .padding(4.dp)
             .clip(RoundedCornerShape(15.dp))
     ) {
-        SubcomposeAsyncImage(
-            model = bild,
-            loading = {
-                CircularProgressIndicator()
-            },
-            error = {
-                Text(text = "Kunde inte ladda bilden")
-            },
+        Image(
+            painter = rememberAsyncImagePainter(imageUrl),
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            contentDescription = "randomPhotos"
         )
     }
 }
+
+
+
 
