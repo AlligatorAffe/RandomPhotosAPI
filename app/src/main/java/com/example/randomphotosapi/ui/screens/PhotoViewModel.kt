@@ -21,33 +21,34 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 sealed interface PhotoUiState {
-
-    object Success: PhotoUiState
-
+    data class Success(val images: MutableList<String>) : PhotoUiState
     object Error : PhotoUiState
     object Loading : PhotoUiState
 }
 
 
-
+const val folderName = "MyImages"
+const val slash = "/"
 
 class PhotoViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
 
+
     var photoUiState: PhotoUiState by mutableStateOf(PhotoUiState.Loading)
         private set
     init {
-        getMarsPhotos()
+        getRandomPhotos()
     }
 
-    fun getMarsPhotos() {
+    fun getRandomPhotos() {
         viewModelScope.launch {
             photoUiState = PhotoUiState.Loading
             photoUiState = try {
                 val listResult = async { PhotoApi.retrofitService.getPhotos() }.await()
                 val imgUrls = listResult.map { it.downloadURL }
                 async{ fetchImages(imgUrls) }.await()
-                PhotoUiState.Success
+                val images = async { loadingAndPushingImagesToArray() }.await()
+                PhotoUiState.Success(images)
 
             } catch (e: IOException) {
                 PhotoUiState.Error
@@ -57,21 +58,17 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
-
     suspend fun fetchImages(urls: List<String>): MutableList<Bitmap> {
-        var i = 1;
         val results = mutableListOf<Bitmap>()
         try {
             coroutineScope {
-                val tasks = List(urls.size) { index -> // Drar igång hela url listans
+                val tasks = List(urls.size) { index ->
                     async(Dispatchers.IO) {
                         performTask(urls[index])
                     }
                 }
-                tasks.forEach {
-                    saveImageToInternalStorage(context,it.await(), i)
-                    i++;
+                tasks.forEachIndexed { index, element ->
+                    saveImageToInternalStorage(context,element.await(), index)
                 }
             }
         } catch (e: Exception) {
@@ -82,10 +79,9 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
 
 
 
-    fun saveImageToInternalStorage(context: Context, bild: Bitmap, i : Int) {
-        val folderName = "MyImages"
-        val fileName = "IMG_$i.jpg"
 
+    fun saveImageToInternalStorage(context: Context, bild: Bitmap, i : Int) {
+        val fileName = "IMG_${i}.jpg"
         val folder = File(context.filesDir, folderName)
         if (!folder.exists()) {
             folder.mkdirs()
@@ -140,5 +136,16 @@ class PhotoViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return inSampleSize
+    }
+
+
+    fun loadingAndPushingImagesToArray(): MutableList<String> {
+        val imagePaths = mutableListOf<String>()
+        val path = context.filesDir.path + slash + folderName
+        val files = File(path).listFiles() ?: emptyArray()
+        files.forEach { file ->
+            imagePaths.add(path + slash + file.name);
+        }
+        return imagePaths
     }
 }
